@@ -37,7 +37,7 @@ ConnectDB()
             # If the database exists and the name is valid, inform the user
             if [ "$Existflag" -eq 0 ] && [ "$validateflag" -eq 0 ]; then
                 cd $DBName
-                TableOperationsMenu
+                TableOperationsMenu 
                 cd ../
             elif [ "$Existflag" -eq 1 ] && [ "$validateflag" -eq 0 ]; then
                 echo "--------------------------------------" 

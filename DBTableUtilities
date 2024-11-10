@@ -410,7 +410,7 @@ InsertDBTable()
 ListDBTable() 
 {
     # Check if there are any files (Database Tables) to list
-    if [[ -z $(ls -F | grep '.txt$' | sed 's/.txt$//') ]]; then
+    if [[ -z $(ls -F | grep -v /) ]]; then
         echo "|-----------------------------------|"
         echo "| No database tables found to list! |"
         echo "|-----------------------------------|"
@@ -423,7 +423,9 @@ ListDBTable()
         echo "Existing database tables:"
         echo "-------------------------------"
         # List all .txt files and remove the .txt extension from the output
-        ls -F | grep '.txt$' | sed 's/.txt$//'
+        ls | sed 's/\.txt$//'
+        # ls
+ 
     fi
     echo "-------------------------------"
 }
@@ -504,7 +506,7 @@ DropSpecificDBTable()
 # Function to drop (delete) a database table
 DropDBTable() 
 {
-    if [[ -z $(ls -F | grep '.txt$' | sed 's/.txt$//') ]]; then
+    if [[ -z $(ls -F | grep -v /) ]]; then
         echo "|----------------------------------|"
         echo "|No database tables exist to drop!.|"
         echo "|----------------------------------|"
@@ -739,7 +741,7 @@ SelectRecord()
 SelectFromDBTable() 
 {
 
-    if [[ -z $(ls -F | grep '.txt$' | sed 's/.txt$//') ]]; then
+    if [[ -z $(ls -F | grep -v /) ]]; then
         echo "|------------------------------------|"
         echo "|No database tables exist to select!.|"
         echo "|------------------------------------|"
@@ -891,7 +893,7 @@ UpdateFromDBTable()
         updatecounter=1
     }
 
-    if [[ -z $(ls -F | grep '.txt$' | sed 's/.txt$//') ]]; then
+    if [[ -z $(ls -F | grep -v /) ]]; then
         echo "|------------------------------------|"
         echo "|No database tables exist to update!.|"
         echo "|------------------------------------|"
@@ -1159,7 +1161,7 @@ DeleteSpecificRecord()
 # Function to delete data from a database table
 DeleteFromDBTable() {
     
-    if [[ -z $(ls -F | grep '.txt$' | sed 's/.txt$//') ]]; then
+    if [[ -z $(ls -F | grep -v /) ]]; then
         echo "|------------------------------------|"
         echo "|No database tables exist to delete!.|"
         echo "|------------------------------------|"
