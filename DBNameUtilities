@@ -1,0 +1,80 @@
+#!/bin/bash
+
+
+# Function to check if a database directory exists
+ExistanceDBNameCheck() 
+{
+
+    if [ "$2" = 'f' ]; then
+        # Check if the file named $1 exists
+        # Return 0 if it exists (true), 1 if it does not (false)
+        [[ -f "$1.txt" ]] && return 0 || return 1
+    else
+        # Check if the directory named $1 exists
+        # Return 0 if it exists (true), 1 if it does not (false)
+        [[ -d "$1" ]] && return 0 || return 1
+    fi
+
+}
+
+# Function to validate the database name
+validateNameCheck() 
+{
+    # Check if the database name ($1) contains only letters and is at least 3 characters long
+    # - `-z $(echo "$1" | grep '[^a-zA-Z]')` checks if there are no non-letter characters
+    # - `-n "$1"` ensures the name is not empty
+    # - `-n ${1:2:1}` checks that the name is at least 3 characters long
+    # if [[ -z $(echo "$1" | grep '[^a-zA-Z]') && -n "$1" && -n ${1:2:1} && $(echo "$1" | grep ' ' ) ]]; then
+    # if [[ -z $(echo "$dbname" | grep '[^a-zA-Z]') && -n "$dbname" && ${#dbname} -ge 3 && ! "$dbname" =~ \  ]]; then
+    
+    # Check if the database name contains only letters (A-Z, a-z), no spaces, and is at least 3 characters long
+    if [[ ${#1} -ge 3 ]] && [[ "$1" =~ ^[a-zA-Z]+$ ]]; then
+        # Return 0 for valid names
+        return 0        
+    else
+        # Display a warning if the database name is invalid
+        echo "|---------------------------------------------------------------------------------|"
+        if [ "$2" = 'd' ]; then
+            echo "| WARNING: Database names must adhere to the following rules:                     |"
+        else
+            echo "| WARNING: Database $3 names must adhere to the following rules:               |"
+        fi
+        echo "| 1. Must be at least 3 characters long.                                          |"
+        echo "| 2. Only uppercase (A-Z) and lowercase (a-z) letters are allowed.                |"
+        echo "| 3. No digits, spaces, or special characters (!, @, #, $, %, etc.) are permitted.|"
+        echo "|---------------------------------------------------------------------------------|"
+        # Return 1 for invalid names
+        return 1
+    fi
+}
+
+# Function to prompt the user for further actions
+AskMainMenuReturn() 
+{
+    
+    # Ask the user if they want to perform the specified action on another database
+    if [ "$3" == '1' ]; then
+        echo "Would you like to $1 $2?"
+    else
+        echo "Would you like to $1 another database$2?"
+    fi
+
+    # Prompt for confirmation (any key for Yes, [N/n] for No)
+    read -p "(Press any key to continue or [N/n] to cancel): " REPLY
+
+    # Check the user's response
+    case $REPLY in
+        [Nn] | [Nn][Oo] )
+            # If user responds with 'N' or 'n' or 'No' or 'no', clear the terminal and return 0
+            # This indicates the user does not want to perform more actions
+            clear
+            return 0
+            ;;
+        * )
+            # For any other input, clear the terminal and return 1
+            # This indicates the user wants to perform more actions
+            clear
+            return 1
+            ;;
+    esac
+}

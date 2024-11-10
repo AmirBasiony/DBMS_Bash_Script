@@ -1,0 +1,1312 @@
+#!/bin/bash
+
+#--------------------------
+# Include Project Modules
+#--------------------------
+# Source the DBNameUtilities script to access its functions and variables.
+source ./DBNameUtilities
+
+#-----------------
+# Global Variables
+#-----------------
+All_DB_Tables_Dropped=0
+
+g_field=()
+g_type=()
+g_PrimaryKey=()
+
+
+IntegerCheck() 
+{
+    local num=$1
+    local name=$2
+    while true
+    do
+        if [[ ! "$num" =~ ^[0-9]+$ ]]; then
+            echo "|---------------------------------------------------|"
+            echo "| WARNING: you must enter integer numbers only (0-9)|"
+            echo "|---------------------------------------------------|"
+            read -p "Enter the '$name' in $3: " num
+        else
+            return $num
+        fi
+    done
+}
+
+CheckFieldExistance()
+{
+    local paramName=$1 
+    for name in "${g_field[@]}"
+    do
+        if [ "${name,,}" == "$paramName" ]; then
+            return 0
+        fi
+    done 
+    return 1
+}
+
+CreateTableMetaData()
+{
+    local TableName=$1
+    while true
+    do
+        echo "----------------------------------------------"
+        read -p "Enter number of fields in [$TableName] table: " NumberOfField
+        IntegerCheck "$NumberOfField" "number of fields" "[$TableName] table"
+        NumberOfField=$?
+ #set -x
+        for (( i=1; i <= $NumberOfField ; i++ ))
+        do
+            if [ "$i" == '1' ]; then
+                
+                g_field+=('ID')
+                g_type+=('int')
+                g_PrimaryKey+=('Yes')
+
+                echo "----------------------------------------------------------------"
+                echo "Field [$i] is the ID, an integer, and serves as the primary key."
+                echo "----------------------------------------------------------------"
+            else
+                echo "-------------------------------------------"
+                echo "Please select the data type for field [$i]:"
+                echo "-------------------------------------------"
+
+                select fieldtype in 'String' 'Integer'
+                do
+                    case $fieldtype in
+                        
+                        'String' )
+                            g_type+=('string')
+                            break
+                        ;;
+                        'Integer' )
+                            g_type+=('int')
+                            break
+                        ;;
+                        # Handle invalid options
+                        *)
+                            echo "Invalid selection, please try again."
+                            echo "------------------------------------"
+                        ;;
+                    esac
+                done
+
+                while true
+                do
+                    echo "--------------------------------"
+                    read -p "Enter the field name: " FieldName
+                    # if [ "${g_type[$i]}"  == 'int' ]; then
+                    # elif [ "${g_type[$i]}"  == 'string' ]; then
+                    # fi
+
+                    # Validate the database name
+                    validateNameCheck "$FieldName" 'f' 'field'
+                    validateflag=$?
+                    # echo validateflag: $validateflag
+
+                    CheckFieldExistance  "${FieldName,,}"
+                    FieldExistFlag=$?
+                    # echo FieldExistFlag: $FieldExistFlag
+
+                    # If the database exists and the name is valid, inform the user
+                    if [ "$FieldExistFlag" -eq 0 ] && [ "$validateflag" -eq 0 ]; then
+                        echo "---------------------------------------------------------"
+                        echo "Field [$FieldName] already exists in the table meta-data!"
+                    # If the database does not exist and the name is valid, add the field name
+                    elif [ "$FieldExistFlag" -eq 1 ] && [ "$validateflag" -eq 0 ]; then
+                        # Add the Field Name
+                        g_field+=($FieldName)
+                        break
+                    fi
+                done
+
+                echo "-------------------------------------------------------------------"
+                echo "Would you like the field '$FieldName' to be set as the primary key?"
+
+                select Primarykey in 'Yes' 'No'
+                do
+                    case $Primarykey in
+                        'Yes' )
+                            g_PrimaryKey+=('Yes')
+                            break
+                        ;;
+                        'No' )
+                            g_PrimaryKey+=('No')
+                            break
+                        ;;
+                        # Handle invalid options
+                        * )
+                            echo "Invalid selection, please try again."
+                            echo "------------------------------------"
+                        ;;
+                    esac
+                done
+                # Inform user of the added field
+                index=$(($i - 1))
+                echo "------------------------------------------------------------"
+                echo "Field [$i]: '${g_field[$index]}' has been added successfully."
+                echo "------------------------------------------------------------"
+            fi
+            sleep 2
+            clear
+        done
+
+        # Final message after all fields are added
+        echo "------------------------------------------------------------"
+        echo "All fields of the table '$TableName' have been added successfully."
+        echo "------------------------------------------------------------"
+        echo "Field Names   : $(echo "${g_field[@]}" | tr ' ' ':')"
+        echo "Field Types   : $(echo "${g_type[@]}" | tr ' ' ':')"
+        echo "Primary Keys  : $(echo "${g_PrimaryKey[@]}" | tr ' ' ':')"
+        echo "------------------------------------------------------------"
+
+        touch "$TableName.txt"
+        #[method 1]
+        {
+            #First row
+            echo "${g_field[@]}" | tr " " ":"
+            #Second row
+            echo "${g_type[@]}" | tr " " ":"
+            #Third row
+            echo "${g_PrimaryKey[@]}" | tr " " ":"
+        } > "$TableName.txt"
+        g_field=()
+        g_type=()
+        g_PrimaryKey=()
+        
+        #[method 2]
+        # #First row
+        # echo ${g_field[@]} | tr " " ":" > $TableName.txt 
+        # #Second row
+        # echo ${g_type[@]} | tr " " ":" >> $TableName.txt 
+        # #Third row
+        # echo ${g_PrimaryKey[@]} | tr " " ":" >> $TableName.txt 
+        break
+ # set +x
+    done
+}
+
+AskForTableName()
+{
+# set -x
+    # Clear the screen
+    clear
+    echo "----------------------------------------"
+    # Prompt the user to enter the name of the database they want to create
+    read -p "Enter the Database Table Name to $1: " DBTableName
+    
+    # Check if the specified database exists
+    ExistanceDBNameCheck "$DBTableName" 'f'
+    Existflag=$?
+    # echo Existflag: $Existflag
+    
+    # Validate the database name
+    validateNameCheck "$DBTableName" 'f' 'table'
+    validateflag=$?
+    # echo validateflag: $validateflag
+    
+    # If the database exists and the name is valid, inform the user
+    if [ "$Existflag" -eq 0 ] && [ "$validateflag" -eq 0 ]; then
+        return 1
+    # If the database does not exist and the name is valid, create the database directory
+    elif [ "$Existflag" -eq 1 ] && [ "$validateflag" -eq 0 ]; then
+        return 0
+    elif [ "$validateflag" -eq 1 ]; then
+        return 2
+    fi
+}
+# Function to create a new database table
+CreateDBTable() 
+{
+    
+    # Infinite loop to handle database creation
+    while true
+    do
+        
+        AskForTableName "create"
+        ExistanceTable=$?
+        if [ $ExistanceTable -eq 0 ]; then
+            # Create the table file
+            CreateTableMetaData "$DBTableName"
+            echo "Database table [$DBTableName] created successfully!"
+            echo "---------------------------------------------"
+        elif [ $ExistanceTable -eq 1 ]; then
+            echo "Database table [$DBTableName] already exists!"
+            echo "-----------------------------------------"
+        fi
+        # Call AskMainMenuReturn and check the result
+        AskMainMenuReturn "create" " table"
+        ExitStatus=$?
+
+        # Exit the loop if user does not want to create more databases
+        [ "$ExitStatus" -eq 0 ] &&  break
+ 
+    done
+}
+
+InsertRecordToTable()
+{
+    TableName=$1
+    TableRecord=()
+
+        g_field=($(awk '{ if (NR == 1) print $0 }' $TableName.txt  | tr ':' ' ' ))
+        g_type=($(awk '{ if (NR == 2) print $0 }' $TableName.txt | tr ':' ' ' ))
+        g_PrimaryKey=($(awk '{ if (NR == 3) print $0 }' $TableName.txt | tr ':' ' ' ))
+        # echo "g_field     : ${g_field[@]}"
+        # echo "g_type      : ${g_type[@]}"
+        # echo "g_PrimaryKey: ${g_PrimaryKey[@]}"
+        NumberOfField=${#g_field[@]}
+
+    while true
+    do
+        local handle_statement=0
+        for (( i=1; i <= $NumberOfField ; i++ ))
+        do
+            index=$(($i - 1))
+            ###############################################################################################################
+            while true
+            do
+                if [ "$handle_statement" -eq 0 ]; then
+                    ((handle_statement++))
+                    echo "----------------------------------------------"
+                fi
+                
+                #Check if Primary Key Record is already Exist or not
+                if [ "${g_PrimaryKey[$index]}" == 'Yes' ]; then
+                    
+                    read -p "Field [$i]: Enter '${g_field[$index]}' in '$TableName' table as a 'Primiary key': " FieldRecord
+
+                    EqualFeildName=$(cut -d : -f $i "$TableName.txt" | awk -v record="$FieldRecord" 'NR == 1 && $0 == record {print 1}')
+                    PKExist=$(cut -d : -f $i "$TableName.txt" | awk -v record="$FieldRecord" 'NR>3 && $0 == record {print 1}')
+
+                    if [ "$EqualFeildName" == '1' ]; then
+                        echo "|---------------------------------------------------------------------------|"
+                        echo "| WARNING: The record value should not be the same of the feild name '${g_field[$index]}'.|"
+                        echo "|---------------------------------------------------------------------------|"
+                        continue
+                    elif [ "$PKExist" == '1' ]; then
+                        echo "|---------------------------------------------------------------|"
+                        echo "| WARNING: The record value already exists and is a primary key.|"
+                        echo "| Please enter a unique value for this primary key field.       |"
+                        echo "|---------------------------------------------------------------|"
+                        continue
+                    fi
+                else
+                    echo "Field [$i]:Would you like to enter a record in '${g_field[$index]}' field?"
+                    select Reply in 'Yes' 'No'
+                    do
+                    # set -x
+                        case $Reply in
+                            'Yes' )
+                                read -p "Field [$i]: Enter '${g_field[$index]}' in '$TableName' table: " FieldRecord
+                                EqualFeildName=$(cut -d : -f $i "$TableName.txt" | awk -v record="$FieldRecord" 'NR == 1 && $0 == record {print 1}')
+                                if [ "$EqualFeildName" == '1' ]; then
+                                    echo "|-----------------------------------------------------------------------------------------|"
+                                    echo "| WARNING: The record value should not be the same of the feild name '${g_field[$index]}'.|"
+                                    echo "|-----------------------------------------------------------------------------------------|"
+                                    continue
+                                fi
+                                break
+                            ;;
+                            'No' )
+                                TableRecord+=("-")
+                                break
+                            ;;
+                            # Handle invalid options
+                            * )
+                                echo "Invalid selection, please enter (yes/no)."
+                                echo "-----------------------------------------"
+                            ;;
+                        esac
+                    done 
+                fi
+
+                if [ "$Reply" == 'No' ]; then
+                    Reply='0'
+                    
+                    break
+                else
+                    #Check Validation Record
+                    if [ ${g_type[$index]} == 'int' ]; then
+                        if [[ ! "$FieldRecord" =~ ^[0-9]+$ ]]; then
+                            echo "|---------------------------------------------------|"
+                            echo "| WARNING: you must enter integer numbers only (0-9)|"
+                            echo "|---------------------------------------------------|"
+                            continue
+                        fi
+                    elif [ ${g_type[$index]} == 'string' ]; then
+
+                        validateNameCheck "$FieldRecord" 'r' "${g_field[$index]}"
+                        validateflag=$?
+                        #The name is valid
+                        [ "$validateflag" -eq '1' ] && continue
+                    fi
+                    
+                    TableRecord+=("$FieldRecord")
+                    break
+                fi
+            done
+                # echo "TableRecord: ${TableRecord[@]}"
+                # set +x
+            ###########################################################
+        done
+            clear    
+        # Final message after all fields are added
+        echo "----------------------------------------------------------"
+        echo "All Records of the table '$TableName' have been inserted successfully."
+        echo "[Inserted Record]:  $(echo "${TableRecord[@]}" | tr ' ' ':')"
+        echo "----------------------------------------------------------"
+
+        echo "${TableRecord[@]}" | tr " " ":" >> "$TableName.txt"
+        TableRecord=()
+
+        # Call AskMainMenuReturn and check the result
+        AskMainMenuReturn "insert" " record into '$TableName' table"
+        ExitStatus=$?
+        echo "-----------------------------------------------------"
+        # Exit the loop if user does not want to create more databases
+        [ "$ExitStatus" -eq 0 ] &&  break    
+    done
+}
+
+# Function to insert data into a database table
+InsertDBTable()
+{
+    if [[ -z $(ls -F | grep -v /) ]]; then
+    echo "|------------------------------------------------------|"
+    echo "|There are no database tables available for insertion!.|"
+    echo "|------------------------------------------------------|"
+
+    # Wait for user input with a timeout of 1 second
+    read -t 2 -p "Press any key to continue..." REPLY
+    clear
+    else
+        # Infinite loop to handle database creation
+        while true
+        do
+            AskForTableName "insert a record"
+            ExistanceTable=$?
+            if [ $ExistanceTable -eq 1 ]; then
+                # Create the table file
+                InsertRecordToTable "$DBTableName" 
+
+            elif [ $ExistanceTable -eq 0 ]; then
+                echo "---------------------------------------------"
+                echo "There is no database table called '$DBTableName'!"
+                echo "---------------------------------------------"
+            fi
+            # Call AskMainMenuReturn and check the result
+            AskMainMenuReturn "insert" " record into another table"
+            
+            ExitStatus=$?
+
+            # Exit the loop if user does not want to create more databases
+            [ "$ExitStatus" -eq 0 ] &&  break
+    
+        done
+    fi
+}
+# Function to list existing tables in the database
+ListDBTable() 
+{
+    # Check if there are any files (Database Tables) to list
+    if [[ -z $(ls -F | grep '.txt$' | sed 's/.txt$//') ]]; then
+        echo "|-----------------------------------|"
+        echo "| No database tables found to list! |"
+        echo "|-----------------------------------|"
+        # Pause for user input before clearing the screen
+        read -t 2 -p "Press any key to continue..."
+        clear
+    else
+        clear
+        echo "-------------------------------"
+        echo "Existing database tables:"
+        echo "-------------------------------"
+        # List all .txt files and remove the .txt extension from the output
+        ls -F | grep '.txt$' | sed 's/.txt$//'
+    fi
+    echo "-------------------------------"
+}
+
+DropAllDBTables()
+{
+    # Ask the user to confirm deletion of all databases
+    echo "----------------------------------------------------"
+    echo "Are you sure you want to delete all database Tables?"
+
+    # Prompt for confirmation (any key to confirm, [N/n] to cancel)
+    read -p "(Press any key to confirm or [N/n] to cancel): " REPLY
+
+    case $REPLY in
+        # Cancel the operation if the user presses N or n
+        [Nn] | [Nn][Oo] ) 
+            echo "-----------------------------------------"
+        ;;
+        # Otherwise, delete all databases
+        * )
+            All_DB_Tables_Dropped=1
+            rm -f *
+            echo "---------------------------------------------------"
+            echo "All database tables have been deleted successfully!"
+            echo "---------------------------------------------------"
+            sleep 2
+            # read -t 2
+        ;;
+    esac
+}
+
+DropSpecificDBTable()
+{
+    clear
+    echo "--------------------------------------"
+
+    # Prompt user for the name of the database to be deleted
+    read -p "Enter the Database Table Name to drop: " DBTableName
+    
+    # Check if the specified database table exists
+    ExistanceDBNameCheck "$DBTableName" 'f' 'table'
+    Existflag=$?
+    
+    # Validate the database table name
+    validateNameCheck "$DBTableName" 'f' 'table'
+    validateflag=$?
+    
+    # Inform the user if the database does not exist or the name is valid
+    if [ "$Existflag" -eq 1 ] && [ "$validateflag" -eq 0 ]; then
+        echo "Database table [$DBTableName] already does not exist!"
+        echo "----------------------------------------"
+    
+    # Delete the database if it exists and the name is valid
+    elif [ "$Existflag" -eq 0 ] && [ "$validateflag" -eq 0 ]; then
+        # Ask the user to confirm deletion of all databases
+        echo "----------------------------------------------------"
+        echo "Are you sure you want to delete '$DBTableName' table?"
+
+        # Prompt for confirmation (any key to confirm, [N/n] to cancel)
+        read -p "(Press any key to confirm or [N/n] to cancel): " REPLY
+
+        case $REPLY in
+            # Cancel the operation if the user presses N or n
+            [Nn] | [Nn][Oo] ) 
+                echo "-----------------------------------------"
+            ;;
+            # Otherwise, delete all databases
+            * )
+                rm -f "$DBTableName.txt"
+                echo "Database table [$DBTableName] deleted successfully!"
+                echo "---------------------------------------------------"
+                sleep 2
+                # read -t 2
+            ;;
+        esac
+    fi
+}
+# Function to drop (delete) a database table
+DropDBTable() 
+{
+    if [[ -z $(ls -F | grep '.txt$' | sed 's/.txt$//') ]]; then
+        echo "|----------------------------------|"
+        echo "|No database tables exist to drop!.|"
+        echo "|----------------------------------|"
+ 
+        # Wait for user input with a timeout of 1 second
+        read -t 2 -p "Press any key to continue..." REPLY
+        clear
+    else
+
+        local back=0
+        while true
+        do
+            clear
+            echo "-----------------------------------"
+            echo "Select an option to drop database tables:"
+            
+            # Provide a menu for the user to choose the type of deletion
+            select DropType in 'Drop All DB Tables' 'Drop Specific DB Table' 'Back'
+            do
+                case $DropType in
+                    # Option to delete all databases
+                    'Drop All DB Tables' )
+                        DropAllDBTables
+                        break
+                    ;;
+                    
+                    # Option to delete a specific database
+                    'Drop Specific DB Table' )
+                        DropSpecificDBTable
+                        break
+                    ;;
+                    
+                    # Option to return to the previous menu
+                    'Back' )
+                        back=1
+                        break
+                    ;;
+                    
+                    # Handle invalid options
+                    *)
+                        echo "Invalid selection, please try again."
+                        echo "------------------------------------"
+                    ;;
+                esac
+            done
+
+            # echo "back=$back ,   All_DB_Tables_Dropped=$All_DB_Tables_Dropped"
+            # If the user selects "Back", exit the loop
+            if [ "$back" -eq 1 -o "$All_DB_Tables_Dropped" -eq 1 ]; then
+                All_DB_Tables_Dropped=0
+                back=0
+                clear
+                break
+            fi
+            
+            # Call AskMainMenuReturn and check the result
+            AskMainMenuReturn "drop"
+            ExitStatus=$?
+            
+            # Exit the loop if the user does not want to continue with database deletion
+            [ "$ExitStatus" -eq 0 ] && break
+        done
+    fi
+}
+# Function to select all tables
+SelectAllTable() 
+{
+    TableName="$1"
+    # Extract records, skipping the first three lines
+    records=$(awk -F ':' 'NR > 3 {print $0}' "$TableName.txt")
+
+        # Check if records variable is non-empty
+        if [ -n "$records" ]; then
+            echo "-----------------------------------------------"
+            echo "displaying all records from the table '$TableName'."
+            echo "-----------------------------------------------"
+            echo "$records"
+        else
+            echo "-------------------------------------------"
+            echo "There are no records in the '$TableName' table."
+        fi
+}
+DisplaycolomnSelection()
+{
+# Select from the table 
+# Start an infinite loop to repeatedly prompt the user for input until a valid selection is made
+
+    while true
+    do
+        clear 
+        echo -e  "\n-------------------------------------------------"
+        # Prompt the user to select an option from the menu
+        echo "Please, select a field name $2 from the following: "
+        echo "-------------------------------------------------"
+        # Present a menu of operations for the user to choose from
+
+        # Read the first line of the file and split it into an array of fields
+        # The first line is expected to contain field names separated by ':'
+        g_field=($(awk '{ if (NR == 1) print $0 }' $DBTableName.txt  | tr ':' ' '))
+        # echo " fields + 1: $((${#g_field[@]}+1))"
+        # Loop through each field, plus one additional option for "Back"
+        for (( i=1 ; i<=$((${#g_field[@]}+1)) ; i++))
+        do
+            # Calculate the index for the current field
+            index=$(( i - 1 ))
+            
+            # Display the current field number and its name
+            if [ $i -eq $((${#g_field[@]}+1)) ];then
+                # If we are at the last option (Back), display it as well
+                echo "$((i))) Back" 
+            else    
+                echo "$i) ${g_field[$index]}"
+            fi
+            
+        done
+
+        # Prompt the user to select a column number
+        read -p '#? ' ColumnNumber
+
+        # Loop through each field number to determine which one was selected
+        for (( i=1 ; i<=$((${#g_field[@]}+1)) ; i++))
+        do
+            # Calculate the index for the current field
+            index=$(( i - 1 ))
+
+            # Check if the user's selection matches the current field number
+            if [ $i == "$ColumnNumber" ]; then
+                # If the selection is equal to the last option number, set Option to "Back"
+                [ $i == $((${#g_field[@]}+1)) ] && Option='Back'|| Option="${g_field[$index]}"
+                break
+            fi
+        done
+
+        # If the user's selection does not match any of the available options
+        if [ $i -gt $((${#g_field[@]}+1)) ]; then
+            echo "Invalid selection, please try again."
+            echo "------------------------------------"
+        else
+            # return $Option
+            break
+        fi
+    done    
+}                
+# Function to select a specific column
+SelectColumn() 
+{
+    TableName="$1"
+    # Extract records, skipping the first three lines
+    records=$(awk -F ':' 'NR > 3 {print $0}' "$TableName.txt")
+    while true
+    do
+        # Check if records variable is non-empty
+        if [ -n "$records" ]; then
+
+            DisplaycolomnSelection 
+        
+            if [ "$Option" != 'Back' ]
+            then
+                # Extract records, skipping the first three lines
+                clear
+                echo "------------------------------------------------------------"
+                echo "Displaying records for the field '$Option' in the table '$TableName'."
+                echo "------------------------------------------------------------"
+                awk -F ':' -v coloumn="$i" ' NR > 3 {print $coloumn}' "$TableName.txt"
+            fi
+            break 
+        else
+            echo "------------------------------------------------"
+            echo "There are no records in the '$TableName' table."
+            break
+        fi
+    done
+}
+
+# Function to select a specific record
+SelectRecord() 
+{
+    TableName="$1"
+    # Infinite loop to handle database creation
+        clear
+    records=$(awk -F ':' 'NR > 3 {print $0}' "$TableName.txt")
+    while true
+    do
+        # Check if records variable is non-empty
+        if [ -n "$records" ]; then
+            echo -e "\n---------------------------------------------------"
+            read -p "Enter the record 'ID' in table '$TableName': " RecordID  
+
+            if [[ ! "$RecordID" =~ ^[0-9]+$ ]]; then
+                echo "|---------------------------------------------------|"
+                echo "| WARNING: you must enter integer numbers only (0-9)|"
+                echo "|---------------------------------------------------|"
+                continue
+            fi
+                        
+            # Extract the line number where the record with RecordID is found, skipping the first three lines
+            recordNumber=$(cut -d : -f 1 "$TableName.txt" | awk -v id="$RecordID" 'NR > 3 && $0 == id {print NR}')
+            # Clear the terminal screen for better readability
+            clear
+                # Display header with context
+            echo "------------------------------------------------------------"
+            echo "Displaying the record with ID '$RecordID' in table '$TableName'."
+            echo "------------------------------------------------------------"
+
+            # Check if recordNumber is set (i.e., if the record was found)
+            if [ -n "$recordNumber" ]; then
+                # Use awk to print the entire record line from the table file
+                awk -F ':' -v rowNumber="$recordNumber" 'NR == rowNumber {print $0}' "$TableName.txt"
+            else
+                # Print a message if the record was not found
+                echo "Record with ID '$RecordID' not found in table '$TableName'."
+            fi
+
+            # Display footer
+            echo "--------------------------------------------------"
+
+            # Call AskMainMenuReturn and check the result
+            AskMainMenuReturn "select a record from" " '$DBTableName' table" '1'
+            ExitStatus=$?
+
+            # Exit the loop if user does not want to create more databases
+            [ "$ExitStatus" -eq 0 ] &&  break
+        else
+            echo "------------------------------------------------"
+            echo "There are no records in the '$TableName' table."
+            break
+        fi
+    done
+}
+
+# Function to select data from a database table
+SelectFromDBTable() 
+{
+
+    if [[ -z $(ls -F | grep '.txt$' | sed 's/.txt$//') ]]; then
+        echo "|------------------------------------|"
+        echo "|No database tables exist to select!.|"
+        echo "|------------------------------------|"
+ 
+        # Wait for user input with a timeout of 1 second
+        read -t 2 -p "Press any key to continue..." REPLY
+        clear
+    else
+        # Infinite loop to handle database creation
+        while true 
+        do 
+            AskForTableName "select from table" 
+            ExistanceTable=$? 
+            if [ $ExistanceTable -eq 1 ]; then 
+
+                if [[ $(sed -n '4p' "$DBTableName.txt") ]]; then
+                    
+                    # Select from the table 
+                    # clear 
+                    echo -e  "\n---------------------------------------------"
+                    # Prompt the user to select an option from the menu
+                    echo "Please, select an option from the following: "
+                    echo   "---------------------------------------------"
+                    # Present a menu of operations for the user to choose from
+                    select operation in 'Select all Table' 'Select specific column' 'Select specific record' 'Back'
+                    do
+                        # Execute the selected operation based on user choice.
+                        case $operation in
+                            'Select all Table' )
+                                SelectAllTable "$DBTableName"   
+                                if [ -n "$records" ]; then 
+                                    echo "---------------------------------------------"
+                                    # Call AskMainMenuReturn and check the result
+                                    AskMainMenuReturn "select" "from '$TableName' table again" "1"
+                                    ExitStatus=$?
+                                    # Exit the loop if user does not want to create more databases
+                                    [ "$ExitStatus" -eq 0 ] &&  break
+                                    echo -e  "\n---------------------------------------------"
+                                    # Prompt the user to select an option from the menu
+                                    echo "Please, select an option from the following: "
+                                    echo "---------------------------------------------" 
+                                else
+                                    break
+                                fi
+                            ;;
+                            'Select specific column' )
+                                SelectColumn "$DBTableName"
+                                if [ -n "$records" ]; then 
+                                    echo "---------------------------------------------" 
+                                    # Call AskMainMenuReturn and check the result
+                                    AskMainMenuReturn "select" "column from '$TableName' table again" "1"
+                                    ExitStatus=$?
+                                    # Exit the loop if user does not want to create more databases
+                                    [ "$ExitStatus" -eq 0 ] &&  break
+
+                                    echo -e  "\n---------------------------------------------"
+                                    # Prompt the user to select an option from the menu
+                                    echo "Please, select an option from the following: "
+                                    echo "---------------------------------------------" 
+                                else
+                                    break
+                                fi
+                            ;;
+                            'Select specific record' )
+                            
+                                SelectRecord "$DBTableName"
+                                if [ -n "$records" ]; then 
+                                    echo "---------------------------------------------"
+                                    # Call AskMainMenuReturn and check the result
+                                    AskMainMenuReturn "select" "from '$TableName' table again" "1"
+                                    ExitStatus=$?
+                                    # Exit the loop if user does not want to create more databases
+                                    [ "$ExitStatus" -eq 0 ] &&  break
+                                    echo -e  "\n---------------------------------------------"
+                                    # Prompt the user to select an option from the menu
+                                    echo "Please, select an option from the following: "
+                                    echo "---------------------------------------------" 
+                                else
+                                    break
+                                fi
+                            ;;
+                            'Back' )
+                                break
+                            ;;
+                            # Handle invalid options
+                            * )
+                                echo "Invalid selection, please try again."
+                                echo "------------------------------------"
+                        esac    
+                    done    
+                else
+                    echo "|------------------------------|"
+                    echo "|The table '$DBTableName' already empty.|"
+                    echo "|------------------------------|"
+                fi
+            elif [ $ExistanceTable -eq 0 ]; then
+                echo "|----------------------------------------------|"
+                echo "|There is no database table called '$DBTableName'!    |"
+                echo "-----------------------------------------------|"
+            fi
+            # Call AskMainMenuReturn and check the result
+            # echo "---------------------------------------------"
+            AskMainMenuReturn "select" "from another table" "1"
+            ExitStatus=$?
+
+            # Exit the loop if user does not want to create more databases
+            [ "$ExitStatus" -eq 0 ] &&  break
+        done
+    fi
+}
+
+# Function to check if table exists
+checkTableExistence() 
+{
+    # set -x
+    AskForTableName $1
+    local existence=$?
+    if [ $existence -eq 0 ]; then
+        echo "---------------------------------------------"
+        echo "There is no database table called '$DBTableName'!"
+        echo "---------------------------------------------"
+        read -t 2
+        return 1
+    elif [ $existence -eq 2 ]; then
+        read -t 2
+        return 1
+    fi
+    return 0
+}
+# Function to validate record ID
+validateRecordID() 
+{
+    if [[ ! "$1" =~ ^[0-9]+$ ]]; then
+        echo "|---------------------------------------------------|"
+        echo "| WARNING: you must enter integer numbers only (0-9)|"
+        echo "|---------------------------------------------------|"
+        return 1
+    fi
+    return 0
+}
+UpdateFromDBTable() 
+{
+    # Function to update field value in the table
+    # OFS=":": This sets the colon (:) as the [output field separator].
+    tempFile="temp_DB_update"
+    updateFieldValue() {
+        awk -F ':' -v row="$1" -v col="$2" -v value="$3" \
+        'NR == row { $col = value } { print $0 }' OFS=":" "$DBTableName.txt" > "$tempFile" && mv "$tempFile" "$DBTableName.txt"
+        updatecounter=1
+    }
+
+    if [[ -z $(ls -F | grep '.txt$' | sed 's/.txt$//') ]]; then
+        echo "|------------------------------------|"
+        echo "|No database tables exist to update!.|"
+        echo "|------------------------------------|"
+        read -t 2 -p "Press any key to continue..." REPLY
+        clear
+        return
+    fi
+
+    local backflag=0
+    local updatecounter=0
+
+
+    TakeTableNameFromUser() {
+        # Loop until a valid table is provided
+        while ! checkTableExistence "update"; do
+                # Keep asking until a valid table is found
+                continue
+        done
+    }
+
+    # Loop for record ID and updates
+    while true; do
+        TakeTableNameFromUser
+
+        # Empty Table Check: Checks if the table is empty by using awk to look at lines after the header (NR > 3)
+        if [[ -z $(awk 'NR > 3' "$DBTableName.txt") ]]; then
+            echo "-------------------------------------------"
+            echo "The database table '$DBTableName' is empty!"
+            echo "-------------------------------------------"
+            AskMainMenuReturn "update" " table"
+            ContinueUpdateFlag=$?
+
+            if [ "$ContinueUpdateFlag" -eq 0 ]; then
+                return
+            else
+                continue
+            fi
+        fi
+
+        while true ;do
+            # Fetch field types and primary keys
+            clear
+            g_type=($(awk 'NR == 2 {print}' "$DBTableName.txt" | tr ':' ' '))
+            g_PrimaryKey=($(awk 'NR == 3 {print}' "$DBTableName.txt" | tr ':' ' '))
+            echo -e "\n---------------------------------------------------"
+            read -p "Enter the record 'ID' in table '$DBTableName': " RecordID
+
+            # Validate Record ID input
+            if ! validateRecordID "$RecordID"; then
+                read -t 2
+                clear
+                continue
+            fi
+
+            # Find the record number based on ID
+            recordNumber=$(awk -F ':' -v id="$RecordID" 'NR > 3 && $1 == id {print NR}' "$DBTableName.txt")
+            if [ -z "$recordNumber" ]; then
+                echo "|-----------------------------------|"
+                echo "| Record with ID '$RecordID' not found!   |"
+                echo "|-----------------------------------|"
+                read -t 2
+                clear
+                continue
+            fi
+            break
+        done
+        # Loop for column selection and updates
+        while true; do
+            DisplaycolomnSelection
+
+            # Check if the selected option matches any field
+            for i in "${!g_field[@]}"; do
+                rec=${g_field[$i]}
+                if [ "$Option" == "$rec" ]; then
+                    # Prevent updating the Primary Key
+                    if [ "${g_PrimaryKey[$i]}" == 'Yes' ]; then
+                        echo "|---------------------------------------------------------|"
+                        echo "| WARNING: The primary key field '${g_field[$i]}' cannot be updated.  |"
+                        echo "|          Please choose a different field to update.     |"
+                        echo "|---------------------------------------------------------|"
+                        break                                                           
+                    fi
+
+                    # Prompt for new value
+                    echo "-----------------------------------------------------------"
+                    echo "Would you like to enter a new value for '${g_field[$i]}'?"
+                    select Reply in 'Yes' 'No'; do
+                        case $Reply in
+                            'Yes')
+                                echo "-----------------------------------------------------------"
+                                read -p "Enter new value for '${g_field[$i]}': " FieldRecord
+                                # Validate field if it should be an integer
+                                if [ "${g_type[$i]}" == 'int' ] && ! [[ "$FieldRecord" =~ ^[0-9]+$ ]]; then
+                                    echo "|---------------------------------------------------|"
+                                    echo "| WARNING: You must enter integer numbers only (0-9).|"
+                                    echo "|---------------------------------------------------|"
+                                    continue
+                                fi
+                                break
+                                ;;
+                            'No')
+                                FieldRecord="-"
+                                break
+                                ;;
+                            *)
+                                echo "Invalid selection, please select (yes/no)."
+                                ;;
+                        esac
+                    done
+
+                    # Update the record with the new value
+                    updateFieldValue "$recordNumber" "$((i + 1))" "$FieldRecord"
+                    echo
+                    break
+                elif [ "$Option" == "Back" ]; then
+                    backflag=1
+                    break
+                fi
+            done
+
+            [ "$backflag" == 1 ] && break
+
+            # Ask if they want to update another field
+            AskMainMenuReturn "update another field in" " '$DBTableName' table" '1'
+            ContinueUpdateFlag=$?
+            [ "$ContinueUpdateFlag" -eq 0 ] && break
+        done
+
+        clear
+
+        if [ "$backflag" == 1 ]; then
+            backflag=0
+            return
+        elif [ $updatecounter -eq 0 -a  "$ContinueUpdateFlag" -eq 0  ]; then
+            return
+        fi
+        echo "--------------------------------------------------------"
+        echo "Record's field of table '$DBTableName' has been updated successfully."
+        echo "[Updated Record]: $(awk -F ':' -v row="$recordNumber" 'NR == row {print $0}' "$DBTableName.txt")"
+        echo "--------------------------------------------------------"
+
+        # Ask if they want to update any other record
+        AskMainMenuReturn "update any record from" " '$DBTableName' table" '1'
+        [ $? -eq 0 ] && return
+    done
+}
+
+
+
+
+DeleteDBTable() 
+{
+    local TableName=$1
+
+    # Check if the specified database exists
+    ExistanceDBNameCheck "$DBTableName" 'f'
+    Existflag=$?
+    # echo Existflag: $Existflag
+    if [ $Existflag = '0' ];then
+
+        # Ask the user to confirm deletion of the table
+        echo "----------------------------------------------------"
+        echo "Are you sure you want to delete the table '$TableName'?"
+
+        # Prompt for confirmation (any key to confirm, [N/n] to cancel)
+        read -p "(Press any key to confirm or [N/n] to cancel): " REPLY
+
+        case $REPLY in
+            # Cancel the operation if the user presses N or n
+            [Nn]|[Nn][Oo])
+                echo "-------------------------"
+                echo "Deletion cancelled."
+                ;;
+            # Otherwise, delete the table
+            *)
+                rm -f "$TableName.txt"
+                echo "-------------------------------------------------------"
+                echo "The table '$TableName' has been deleted successfully!"
+                echo "-------------------------------------------------------"
+                sleep 2
+                ;;
+        esac
+    else
+        echo "------------------------------------------"
+        echo "The table '$TableName' already not exists!"
+        echo "------------------------------------------"
+    fi
+}
+
+DeleteSpecificRecord() 
+{
+    local TableName=$1
+    empty=0
+
+    # Function to take the record ID from the user
+    TakeIDFromUser() 
+    {
+        clear
+        echo -e "\n------------------------------------------"
+        # Prompt user for the record ID of the database to be deleted
+        read -p "Enter the record 'ID' in table '$TableName': " RecordID
+        if ! validateRecordID "$RecordID"; then
+            read -t 2
+            return 1
+        else
+            return 0
+        fi
+    }
+
+    # Check if the table is empty before proceeding
+    if [[ ! $(sed -n '4p' "$TableName.txt") ]]; then
+        echo "|---------------------------------|"
+        echo "| The table '$TableName' is empty! |"
+        echo "|---------------------------------|"
+        read -t 2
+        return
+    fi
+    
+    while true; do
+        # Take record ID from the user
+        if TakeIDFromUser; then
+            # Find the record index (line number) based on the record ID
+            RecordIndex=$(awk -F ':' -v id="$RecordID" '$1 == id && NR > 3 {print NR}' "$TableName.txt")
+
+            # Check if the record exists
+            if [ -n "$RecordIndex" ]; then            
+                # Confirm deletion of the record
+                echo "----------------------------------------------------"
+                echo "Are you sure you want to delete the record with ID '$RecordID' from table '$TableName'?"
+
+                # Prompt for confirmation (any key to confirm, [N/n] to cancel)
+                read -p "(Press any key to confirm or [N/n] to cancel): " REPLY
+                
+                case $REPLY in
+                # Cancel the operation if the user presses N or n
+                [Nn] | [Nn][Oo] ) 
+                    echo "-----------------------------------------"
+                    break
+                ;;
+                # Otherwise, delete the record
+                * )
+                    sed -i "${RecordIndex}d" "$TableName.txt"
+                    echo "-------------------------------------------------------------------------"
+                    echo "The Record with ID '$RecordID' has been deleted from table '$TableName' successfully!"
+                    echo "-------------------------------------------------------------------------"
+                    break
+                ;;
+                esac  
+            else
+                echo "----------------------------------------------------------------"
+                echo "The Record with ID '$RecordID' does not exist in table '$TableName'!"
+                echo "----------------------------------------------------------------"
+            fi
+        else
+            continue
+        fi
+
+        # After deletion or failure, prompt the user for the next action
+        AskMainMenuReturn "delete" "another record from '$TableName' table" "1"
+        ExitStatus=$?
+        [ "$ExitStatus" -eq 0 ] && break
+    done
+}
+
+# Function to delete data from a database table
+DeleteFromDBTable() {
+    
+    if [[ -z $(ls -F | grep '.txt$' | sed 's/.txt$//') ]]; then
+        echo "|------------------------------------|"
+        echo "|No database tables exist to delete!.|"
+        echo "|------------------------------------|"
+        read -t 2 -p "Press any key to continue..." REPLY
+        clear
+        return
+    fi
+    existanceflag=1
+    local back=0
+    while true 
+    do
+         while true ; do
+            if [ $existanceflag == 0 ];then
+                existanceflag=1
+                break
+            else
+                checkTableExistence "delete from"
+                existanceflag=$?
+            fi
+        done
+        if [[ $(sed -n '4p' "$DBTableName.txt") ]]; then
+            clear
+            echo "---------------------------------------------------"
+            echo "Select an option to delete from the database table:"
+            
+            select DropType in 'Delete All Records from Table' 'Delete Specific Record from Table' 'Back'; do
+                case $DropType in
+                    'Delete All Records from Table')
+                        echo "----------------------------------------------------"
+                        echo "Are you sure you want to delete '$DBTableName' table?"
+
+                        # Prompt for confirmation (any key to confirm, [N/n] to cancel)
+                        read -p "(Press any key to confirm or [N/n] to cancel): " REPLY
+
+                        case $REPLY in
+                            # Cancel the operation if the user presses N or n
+                            [Nn] | [Nn][Oo] ) 
+                                echo "-----------------------------------------"
+                                break
+                            ;;
+                            # Otherwise, delete all databases
+                            * )
+                                sed -i '4,$d' "$DBTableName.txt"
+                                echo "----------------------------------------------------------"
+                                echo "All records in table '$DBTableName' have been deleted successfully."
+                                echo "----------------------------------------------------------"
+                                read -t 2
+                            ;;
+                        esac            
+                        break
+                        ;;
+                    'Delete Specific Record from Table')
+                        DeleteSpecificRecord "$DBTableName"
+                        # echo "------------------------------------------"
+                        break
+                        ;;
+                    'Back')
+                        back=1
+                        break
+                        ;;
+                    *)
+                        echo "Invalid selection, please try again."
+                        echo "------------------------------------"
+                        ;;
+                esac
+            done
+
+            if [ "$back" -eq 1 ]; then
+                back=0
+                clear
+                break
+            fi
+        else
+            echo "|---------------------------------------|"
+            echo "|The table '$DBTableName' already empty.|"
+            echo "|-------------------------------------- |"
+            
+        fi
+        AskMainMenuReturn "delete" " from another table" "1"
+        ExitStatus=$?
+        [ "$ExitStatus" -eq 0 ] && break
+        # read input_variable <<< ""
+    done
+    # set +x
+}
+
+
+TableOperationsMenu()
+{
+    Backflag=0
+    while true
+    do    
+        # Check if the Back flag is set, and if so, break the loop.
+        if [ $Backflag = '1' ]; then
+            Backflag=0
+            break
+        fi
+        
+        # # Simulate pressing 'Enter' once at the start of the loop, unless beginloop is 0.
+        # (( $beginloop != 0 )) && read input_variable <<< "" || (( beginloop++ ))
+        
+        echo -e  "\n---------------------------------------------"
+        # Prompt the user to select an option from the menu
+        echo "Please, select an option from the following: "
+        echo "---------------------------------------------"
+        # Present a menu of operations for the user to choose from
+        select operation in 'Create table' 'Insert tables' 'List table' 'Drop table' 'Select from table' 'Update from table' 'Delete from table'  'Back'
+        do    
+            # Execute the selected operation based on user choice.
+            case $operation in
+                'Create table' )
+                    CreateDBTable
+                    break
+                ;;
+                'Insert tables' )
+                    InsertDBTable
+                    break
+                ;;
+                'List table' )
+                    ListDBTable
+                    break
+                ;;
+                'Drop table' )
+                    DropDBTable
+                    break
+                ;;
+                'Select from table' )
+                    SelectFromDBTable
+                    break
+                ;;
+                'Update from table' )
+                    UpdateFromDBTable 
+                    break
+                ;;
+                'Delete from table' )
+                    DeleteFromDBTable
+                    break
+                ;;
+                'Back' )
+                    Backflag=1  # Set the back flag to 1 to terminate the main loop.
+                    break
+                ;;
+                # Handle invalid options
+                * )
+                    echo "Invalid selection, please try again."
+                    echo "------------------------------------"
+            esac
+        done
+    done
+}
