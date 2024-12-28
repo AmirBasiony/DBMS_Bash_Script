@@ -1,1 +1,266 @@
-# Database_Management_System_using_BashScript
+## Bash Shell Script Database Management System (DBMS)
+
+This project implements a Bash Shell Script Database Management System (DBMS) that enables users to store and retrieve data from their hard disk. The system simulates a simple DBMS with basic operations like creating databases and tables, inserting records, and retrieving, updating, and deleting data.
+
+### Features
+
+#### Main Menu
+The application provides a Command-Line Interface (CLI) menu with the following options:
+- **Create Database**: Create a new database (directory) inside the DBMS directory.
+- **List Databases**: List all existing databases (directories) inside the DBMS directory.
+- **Connect to Database**: Connect to a specific database to perform operations like table creation and data manipulation.
+- **Drop Database**: Delete an existing database (directory) and all associated tables.
+  
+#### Database Operations (After Connection)
+Once connected to a specific database, the system presents the following menu for table-related operations:
+- **Create Table**: Create a new table inside the connected database.
+- **List Tables**: List all tables (files) inside the connected database.
+- **Drop Table**: Delete a table (file) from the connected database.
+- **Insert into Table**: Insert records into a table.
+- **Select from Table**: This option retrieves records from a table and allows you to display specific rows, columns, or the entire table content.
+- **Delete from Table**: Delete specific records or all records from a table.
+- **Update Table**: Modify existing records in a table.
+
+### Key Features
+- **Data Storage**: Databases are stored as directories within a main DBMS directory. Each database is represented as a folder, and tables are stored as text files inside the respective database folder.
+- **Formatted Output**: Select queries and display results in a readable format.
+- **Column Data Types**: During table creation, the script asks for column data types (e.g., int, string) and checks for correct types during insert and update operations.
+- **Primary Key**: The user can define one or more primary keys during table creation. At least one primary key is required, and it will be automatically set during table creation. If the user specifies multiple primary keys, the script allows it, but only one primary key will be designated as the primary key for validation during insert operations.
+
+### CRUD Operations Handling
+This DBMS project handles all basic CRUD operations (Create, Read, Update, Delete) for databases and tables:
+- **Create**: Create new databases (directories) and tables (text files) with specific column data types.
+- **Insert**: Insert new records into tables after ensuring proper data types and primary key constraints.
+- **Read**: Retrieve and display records from tables with formatted output for easy readability.
+- **Update**: Modify existing table records while ensuring data type consistency and primary key integrity.
+- **Delete**: Remove specific records or all records from a table. Drop entire tables or databases (directories) if no longer needed.
+
+### Project Setup
+1. **Clone the Repository**: Clone or download the repository to your machine.
+2. **Run the Script**: To start the DBMS, run the following command in your terminal:
+
+   ```bash
+   bash DBMS_APP.sh
+   ```
+
+### User Interaction Example
+
+Upon running the script, the user will be presented with a menu in the terminal:
+
+```sql
+♥Welcome, amir, to the Database Management System!♥
+
+---------------------------------------------
+Please, select an option from the following:
+---------------------------------------------
+1) CreateDB
+2) listDB
+3) DropDB
+4) ConnectDB
+5) Exit
+#? 1
+----------------------------------
+Enter the Database Name to create: Amir
+Database [Amir] created successfully!
+-----------------------------------------
+Would you like to create another database?
+(Press any key to continue or [N/n] to cancel): 
+```
+
+Once databases are created, the user can:
+- **List Databases**:
+  ```sql
+  |--------------------|
+  | Existing databases |
+  |--------------------|
+      Amir
+  |--------------------|
+  ```
+- **Drop Databases**:
+  ```sql
+  Enter the Database Name to drop: Amir
+  ----------------------------------------------
+  Are you sure you want to delete database [Amir]?
+  (Press any key to confirm or [N/n] to cancel):
+  ----------------------------------------
+  Database [Amir] deleted successfully!
+  ----------------------------------------
+  ```
+
+- **Connect to Databases**:
+  ```sql
+  Enter the Database Name to connect: Amir
+  ---------------------------------------------
+  Please, select an option from the following: 
+  ---------------------------------------------
+  1) Create table
+  2) Insert into table
+  3) List tables
+  4) Drop table
+  5) Select from table
+  6) Update from table
+  7) Delete from table
+  8) Back
+  #? 
+  ```
+
+#### Example of Creating a Table
+
+- **Creating Table with Valid and Invalid Names**:
+
+```sql
+----------------------------------------
+Enter the Database Table Name to create: as
+|---------------------------------------------------------------------------------|
+| WARNING: Database table names must adhere to the following rules:               |
+| 1. Must be at least 3 characters long.                                          |
+| 2. Only uppercase (A-Z) and lowercase (a-z) letters are allowed.                |
+| 3. No digits, spaces, or special characters (!, @, #, $, %, etc.) are permitted.|
+|---------------------------------------------------------------------------------|
+Would you like to create another database table?
+(Press any key to continue or [N/n] to cancel): 
+```
+
+```sql
+----------------------------------------
+Enter the Database Table Name to create: ma*#med
+|---------------------------------------------------------------------------------|
+| WARNING: Database table names must adhere to the following rules:               |
+| 1. Must be at least 3 characters long.                                          |
+| 2. Only uppercase (A-Z) and lowercase (a-z) letters are allowed.                |
+| 3. No digits, spaces, or special characters (!, @, #, $, %, etc.) are permitted.|
+|---------------------------------------------------------------------------------|
+Would you like to create another database table?
+(Press any key to continue or [N/n] to cancel): 
+```
+
+```sql
+----------------------------------------------
+Enter the Database Table Name to create: Table
+----------------------------------------------
+Enter number of fields in [Table] table: 3
+----------------------------------------------------------------
+Field [1] is the ID, an integer, and serves as the primary key.
+----------------------------------------------------------------
+
+Please select the data type for field [2]:
+-------------------------------------------
+1) String
+2) Integer
+#? 1
+--------------------------------
+Enter the field name: as
+|---------------------------------------------------------------------------------|
+| WARNING: Database field names must adhere to the following rules:               |
+| 1. Must be at least 3 characters long.                                          |
+| 2. Only uppercase (A-Z) and lowercase (a-z) letters are allowed.                |
+| 3. No digits, spaces, or special characters (!, @, #, $, %, etc.) are permitted.|
+|---------------------------------------------------------------------------------|
+--------------------------------
+Enter the field name: username
+-------------------------------------------------------------------
+Would you like the field 'username' to be set as the primary key?
+1) Yes
+2) No
+#? 2
+------------------------------------------------------------
+Field [2]: 'username' has been added successfully.
+------------------------------------------------------------
+
+Please select the data type for field [3]:
+-------------------------------------------
+1) String
+2) Integer
+#? 23
+Invalid selection, please try again.
+------------------------------------
+#? 2
+--------------------------------
+Enter the field name: age2
+|---------------------------------------------------------------------------------|
+| WARNING: Database field names must adhere to the following rules:               |
+| 1. Must be at least 3 characters long.                                          |
+| 2. Only uppercase (A-Z) and lowercase (a-z) letters are allowed.                |
+| 3. No digits, spaces, or special characters (!, @, #, $, %, etc.) are permitted.|
+|---------------------------------------------------------------------------------|
+--------------------------------
+Enter the field name: age
+-------------------------------------------------------------------
+Would you like the field 'age' to be set as the primary key?
+1) Yes
+2) No
+#? 2
+------------------------------------------------------------
+Field [3]: 'age' has been added successfully.
+------------------------------------------------------------
+
+------------------------------------------------------------
+All fields of the table 'Table' have been added successfully.
+------------------------------------------------------------
+Field Names   : ID:username:age
+Field Types   : int:string:int
+Primary Keys  : Yes:No:No
+------------------------------------------------------------
+Database table [Table] created successfully!
+---------------------------------------------
+Would you like to create another database table?
+(Press any key to continue or [N/n] to cancel): 
+```
+
+#### Example of Inserting Records into a Table
+
+```sql
+----------------------------------------
+Enter the Database Table Name to insert a record: Table
+----------------------------------------------
+Field [1]: Enter 'ID' in 'Table' table as a 'Primary key': amir
+|---------------------------------------------------|
+| WARNING: you must enter integer numbers only (0-9)|
+|---------------------------------------------------|
+Field [1]: Enter 'ID' in 'Table' table as a 'Primary key': 1
+Field [2]: Would you like to enter a record in 'username' field?
+1) Yes
+2) No
+#? 1
+Field [2]: Enter 'username' in 'Table' table: amir
+Field [3]: Would you like to enter a record in 'age' field?
+1) Yes
+2) No
+#? 1
+Field [3]: Enter 'age' in 'Table' table: 24
+----------------------------------------------------------
+All records of the table 'Table' have been inserted successfully.
+[Inserted Record]: 1:amir:24
+----------------------------------------------------------
+Would you like to insert another database record into 'Table' table?
+(Press any key to continue or [N/n] to cancel): 
+```
+
+#### Example of Selecting Records from a Table
+
+```sql
+---------------------------------------------
+Please, select an option from the following: 
+---------------------------------------------
+1) Select all Table
+2) Select specific column
+3) Select specific record
+
+
+4) Back
+#? 1
+--------------------------------------------
+Data from table [Table] has been selected:
+--------------------------------------------
+ID  | username | age
+--------------------
+1   | amir     | 24
+--------------------
+--------------------------------------------
+Would you like to select another record from 'Table' table?
+(Press any key to continue or [N/n] to cancel): 
+```
+
+---
+
+This version includes clear warnings, instructions, and the expected user interactions. Would you like any further modifications?
