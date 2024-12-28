@@ -488,6 +488,67 @@ Enter the Database Table Name to select from table: Table
 Would you like to select from another table?
 (Press any key to continue or [N/n] to cancel): n
 ```
+#### Example of Dropping a Table
+
+Once the user selects "Drop table", the following process occurs:
+
+```bash
+---------------------------------------------
+Please, select an option from the following: 
+---------------------------------------------
+1) Create table
+2) Insert tables
+3) List table
+4) Drop table
+5) Select from table
+6) Update from table
+7) Delete from table
+8) Back
+#? 4
+-----------------------------------
+Select an option to drop database tables:
+1) Drop All DB Tables
+2) Drop Specific DB Table
+3) Back
+#? 1
+----------------------------------------------------
+Are you sure you want to delete all database Tables?
+(Press any key to confirm or [N/n] to cancel): n
+-----------------------------------
+Select an option to drop database tables:
+1) Drop All DB Tables
+2) Drop Specific DB Table
+3) Back
+#? 2
+--------------------------------------
+Enter the Database Table Name to drop: Table
+----------------------------------------------------
+Are you sure you want to delete 'Table' table?
+(Press any key to confirm or [N/n] to cancel): 
+---------------------------------------------------
+Database table [Table] deleted successfully!
+---------------------------------------------------
+
+lets verify the dropping table
+---------------------------------------------
+Please, select an option from the following: 
+---------------------------------------------
+1) Create table
+2) Insert tables
+3) List table
+4) Drop table
+5) Select from table
+6) Update from table
+7) Delete from table
+8) Back
+#? 3
+|-----------------------------------|
+| No database tables found to list! |
+|-----------------------------------|
+Press any key to continue...
+
+---
+
 
 
 ### Project Setup
