@@ -338,7 +338,7 @@ Record's field of table 'Table' has been updated successfully.
 Would you like to update any record from  'Table' table?
 (Press any key to continue or [N/n] to cancel): 
 ```
----
+
 
 #### Checking the Updated Table Field
 
