@@ -78,11 +78,11 @@ After running the script, the directory structure will be:
 ```
 ---
 
-**Directory Operations Breakdown:**
+#### Directory Operations Breakdown:**
 
-DBMS/: The main directory where all databases are stored.
-MyDatabase/: A directory representing a database, containing tables as text files.
-FirstTable.txt, SecondTable.txt: Text files representing tables inside the `MyDatabase` directory. Each row in these text files represents a record.
+-  **DBMS/**: The main directory where all databases are stored.
+-  **MyDatabase/**: A directory representing a database, containing tables as text files.
+-  **FirstTable.txt, SecondTable.txt**: Text files representing tables inside the `MyDatabase` directory. Each row in these text files represents a record.
 
 ---
 
