@@ -36,13 +36,18 @@ This DBMS project handles all basic CRUD operations (Create, Read, Update, Delet
 - **Delete**: Remove specific records or all records from a table. Drop entire tables or databases (directories) if no longer needed.
 
 ### Project Setup
-1. **Clone the Repository**: Clone or download the repository to your machine.
+1. **Clone the Repository**: Clone or download the repository to your machine using the following command in your terminal:
+  ```bash
+   git clone https://github.com/AmirBasiony/Database_Management_System_using_BashScript.git
+   cd Database_Management_System_using_BashScript/
+   ```
 2. **Run the Script**: To start the DBMS, run the following command in your terminal:
 
    ```bash
    bash DBMS_APP.sh
    ```
----
+
+   ---
 
 ### User Interaction Example
 
@@ -559,13 +564,5 @@ Press any key to continue...
 ```
 ---
 
-## Project Setup
-1. **Clone the Repository**: Clone or download the repository to your machine.
-2. **Run the Script**: To start the DBMS, run the following command in your terminal:
-
-   ```bash
-   bash DBMS_APP.sh
-   ```
----
 
 
