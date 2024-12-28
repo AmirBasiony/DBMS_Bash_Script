@@ -547,11 +547,8 @@ Please, select an option from the following:
 |-----------------------------------|
 Press any key to continue...
 
----
 
-
-
-### Project Setup
+## Project Setup**
 1. **Clone the Repository**: Clone or download the repository to your machine.
 2. **Run the Script**: To start the DBMS, run the following command in your terminal:
 
@@ -559,6 +556,5 @@ Press any key to continue...
    bash DBMS_APP.sh
    ```
 
----
 
 
