@@ -25,7 +25,7 @@ Once connected to a specific database, the system presents the following menu fo
 - **Data Storage**: Databases are stored as directories within a main DBMS directory. Each database is represented as a folder, and tables are stored as text files inside the respective database folder.
 - **Formatted Output**: Select queries and display results in a readable format.
 - **Column Data Types**: During table creation, the script asks for column data types (e.g., int, string) and checks for correct types during insert and update operations.
-- **Primary Key**: The user can define one or more primary keys during table creation. At least one primary key is required, and it will be automatically set during table creation. If the user specifies multiple primary keys, the script allows it, but only one primary key will be designated as the primary key for validation during insert operations.
+- **Primary Key**: The user can define one or more primary keys during table creation. At least one primary key is required, and it will be automatically set during table creation. If the user specifies multiple primary keys, the script allows it.
 
 ### CRUD Operations Handling
 This DBMS project handles all basic CRUD operations (Create, Read, Update, Delete) for databases and tables:
@@ -46,8 +46,45 @@ This DBMS project handles all basic CRUD operations (Create, Read, Update, Delet
    ```bash
    bash DBMS_APP.sh
    ```
+---
 
-   ---
+### Example Directory Structure
+
+Before running the `DBMS_APP.sh` script:
+```bash
+.
+├── ConnectDB.sh
+├── CreateDB.sh
+├── DBMS_APP.sh
+├── DBNameUtilities
+├── DBTableUtilities
+├── DropDB.sh
+├── listDB.sh
+└── README.md
+```
+
+After running the script, the directory structure will be:
+```bash
+├── ConnectDB.sh
+├── CreateDB.sh
+├── DBMS
+│   └── (Database directories)
+├── DBMS_APP.sh
+├── DBNameUtilities
+├── DBTableUtilities
+├── DropDB.sh
+├── listDB.sh
+└── README.md
+```
+---
+
+**Directory Operations Breakdown:**
+
+DBMS/: The main directory where all databases are stored.
+MyDatabase/: A directory representing a database, containing tables as text files.
+FirstTable.txt, SecondTable.txt: Text files representing tables inside the `MyDatabase` directory. Each row in these text files represents a record.
+
+---
 
 ### User Interaction Example
 
