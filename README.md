@@ -42,6 +42,7 @@ This DBMS project handles all basic CRUD operations (Create, Read, Update, Delet
    ```bash
    bash DBMS_APP.sh
    ```
+---
 
 ### User Interaction Example
 
@@ -103,6 +104,7 @@ Once databases are created, the user can:
   8) Back
   #? 
   ```
+---
 
 #### Example of Creating a Table
 
@@ -206,6 +208,7 @@ Database table [Table] created successfully!
 Would you like to create another database table?
 (Press any key to continue or [N/n] to cancel): 
 ```
+---
 
 #### Example of Inserting Records into a Table
 
@@ -235,6 +238,7 @@ All records of the table 'Table' have been inserted successfully.
 Would you like to insert another database record into 'Table' table?
 (Press any key to continue or [N/n] to cancel): 
 ```
+---
 
 #### Example of Selecting Records from a Table
 
@@ -334,6 +338,7 @@ Record's field of table 'Table' has been updated successfully.
 Would you like to update any record from  'Table' table?
 (Press any key to continue or [N/n] to cancel): 
 ```
+---
 
 #### Checking the Updated Table Field
 
@@ -370,6 +375,8 @@ displaying all records from the table 'Table'.
 2:ahmed:-
 ---------------------------------------------
 ```
+---
+
 #### Example of Deleting Records from a Table
 
 Once the user selects "Delete from table", the following process occurs:
@@ -437,8 +444,9 @@ displaying all records from the table 'Table'.
 1:Karim:24
 ---------------------------------------------
 ```
-
 As you can see, the record with ID '2' is no longer in the table.
+
+---
 
 #### Delete All Records
 
@@ -488,6 +496,8 @@ Enter the Database Table Name to select from table: Table
 Would you like to select from another table?
 (Press any key to continue or [N/n] to cancel): n
 ```
+---
+
 #### Example of Dropping a Table
 
 Once the user selects "Drop table", the following process occurs:
@@ -546,7 +556,8 @@ Please, select an option from the following:
 | No database tables found to list! |
 |-----------------------------------|
 Press any key to continue...
-
+```
+---
 
 ## Project Setup
 1. **Clone the Repository**: Clone or download the repository to your machine.
@@ -555,6 +566,6 @@ Press any key to continue...
    ```bash
    bash DBMS_APP.sh
    ```
-
+---
 
 
