@@ -78,7 +78,7 @@ After running the script, the directory structure will be:
 ```
 ---
 
-#### Directory Operations Breakdown:**
+#### Directory Operations Breakdown:
 
 -  **DBMS/**: The main directory where all databases are stored.
 -  **MyDatabase/**: A directory representing a database, containing tables as text files.
